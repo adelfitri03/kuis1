@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kuis Anak Ngaji</title>
 
 <style>
@@ -54,6 +55,117 @@ button {
   color: white;
   font-size: 12px;
   font-weight: bold;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
+  .card {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+    border-radius: 15px;
+  }
+  
+  h1 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  h2 {
+    font-size: 18px;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 14px;
+    margin: 6px 0;
+  }
+  
+  #playerName {
+    font-size: 16px;
+  }
+  
+  p {
+    font-size: 14px;
+  }
+  
+  #question {
+    font-size: 16px;
+    margin: 15px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 8px;
+  }
+  
+  .card {
+    padding: 15px;
+    border-radius: 12px;
+  }
+  
+  h1 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  
+  h2 {
+    font-size: 16px;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 13px;
+    margin: 5px 0;
+  }
+  
+  #playerName {
+    font-size: 14px;
+    padding: 8px;
+  }
+  
+  p {
+    font-size: 13px;
+  }
+  
+  #question {
+    font-size: 15px;
+    margin: 12px 0;
+  }
+  
+  .progress-bar {
+    height: 20px;
+    margin: 8px 0;
+  }
+  
+  .progress-fill {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: 12px;
+  }
+  
+  h1 {
+    font-size: 16px;
+  }
+  
+  button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  #playerName {
+    font-size: 13px;
+    padding: 6px;
+  }
 }
 </style>
 </head>
@@ -210,7 +322,8 @@ const soalBank = [
   { q:"Iqlab terjadi ketika?", o:["Nun sukun bertemu ba","Tanwin bertemu ba","Mim sukun bertemu ba","Huruf hidup bertemu ba"], a:1 },
   { q:"Rukun Islam yang keempat adalah?", o:["Shalat","Zakat","Puasa","Haji"], a:2 },
   { q:"Nabi Yusuf dikenal dengan julukan?", o:["Al-Aziz","Ash-Shiddiq","Al-Mustafa","Al-Karim"], a:0 },
-  { q:"Nabi yang terkenal dengan kesabarannya adalah?", o:["Nabi Ayub","Nabi Musa","Nabi Ibrahim","Nabi Nuh"], a:0 },
+  { q:"Nabi yang terkenal dengan kesabarannya adalah?", o:["Nabi Ayub","Nabi Musa","Nabi Ibrahim","Nabi Nuh"], a:0 }
+];
 
 let soal = [];
 let i = 0;
@@ -314,7 +427,7 @@ function gameOver() {
   document.getElementById("quizScreen").style.display = "none";
   document.getElementById("gameOverScreen").style.display = "block";
   document.getElementById("gameOverPlayerName").innerText = "👤 " + playerName;
-  document.getElementById("gameOverQuestions").innerText = i + " dari 20";
+  document.getElementById("gameOverQuestions").innerText = i + " dari " + soal.length;
   document.getElementById("gameOverPoint").innerText = point;
 
   kirimKeSpreadsheet(playerName, point, 0, "Game Over");
@@ -331,10 +444,15 @@ function kirimKeSpreadsheet(nama, score, nilai, ranking) {
 
   fetch(GOOGLE_APPS_SCRIPT_URL, {
     method: "POST",
+    mode: "no-cors",
     body: data
   })
-  .then(() => console.log("Data masuk Google Sheets ✅"))
-  .catch(err => console.error("Gagal kirim:", err));
+  .then(response => {
+    console.log("Data terkirim ke Google Sheets ✅", { nama, score, nilai, ranking });
+  })
+  .catch(err => {
+    console.error("Gagal kirim data:", err);
+  });
 }
 </script>
 
