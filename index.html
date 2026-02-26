@@ -167,6 +167,51 @@ button {
     padding: 6px;
   }
 }
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.hurufJatuh {
+  position: absolute;
+  left: calc(10% + 80% * var(--rand));
+  top: 0;
+  font-size: 50px;
+  cursor: pointer;
+  padding: 15px 25px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+  user-select: none;
+  font-weight: bold;
+  border: 3px solid #4facfe;
+}
+
+.hurufJatuh:hover {
+  transform: scale(1.15);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.hurufJatuh.correct {
+  background: #4caf50;
+  color: white;
+  animation: pulse 0.5s;
+}
+
+.hurufJatuh.target {
+  border: 4px solid #ff6b6b;
+  background: linear-gradient(135deg, #ffe082, #ff9800);
+  font-weight: bold;
+}
 </style>
 </head>
 
@@ -181,22 +226,31 @@ button {
   <button onclick="startQuiz()">🚀 Mulai Kuis</button>
 </div>
 
+<!-- MINI GAME SCREEN -->
+<div id="miniGameScreen" style="display:none;">
+  <h2>🎮 Mini Game: Tangkap Huruf!</h2>
+  <p>Klik huruf yang diminta sebelum waktu habis!</p>
+  <div style="background: linear-gradient(135deg, #fff5e1, #ffe6cc); padding: 15px; border-radius: 10px; margin: 15px 0; border: 3px solid #ff9800;">
+    <p style="margin: 5px 0; font-size: 14px;">📌 Target Huruf:</p>
+    <h1 id="targetHuruf" style="font-size: 60px; margin: 10px 0; color: #ff6b6b; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);"></h1>
+  </div>
+  <div style="display: flex; justify-content: space-around; margin: 10px 0; background: #f0f0f0; padding: 10px; border-radius: 10px;">
+    <div><p style="margin: 5px 0; font-size: 14px;">⏳ Waktu: <span id="gameTime" style="font-weight: bold; color: #ff6b6b;">20</span> detik</p></div>
+    <div><p style="margin: 5px 0; font-size: 14px;">⭐ Skor: <span id="miniScore" style="font-weight: bold; color: #4facfe;">0</span></p></div>
+  </div>
+  <div id="gameArea" style="position:relative;height:450px;background:linear-gradient(135deg, #e3f2fd, #f3e5f5);border-radius:15px;overflow:hidden;margin:10px 0;border:3px dashed #9c27b0;box-shadow:inset 0 0 10px rgba(0,0,0,0.1);"></div>
+</div>
+
 <!-- QUIZ SCREEN -->
 <div id="quizScreen" style="display:none;">
-  <div style="margin-bottom:20px;background:#f9f9f9;padding:15px;border-radius:10px;">
-    <p style="margin:5px 0;font-size:14px;">📋 Soal <span id="questionNum">1</span> dari <span id="totalQuestion">3</span></p>
-    <div class="progress-bar">
-      <div class="progress-fill" id="scoreProgress" style="width:0%;">0%</div>
-    </div>
-    <p style="margin:10px 0 0 0;font-size:18px;">⭐ Point: <span id="point" style="font-weight:bold;color:#4facfe;">0</span></p>
-  </div>
-  <p id="question"></p>
-  <button id="o0" onclick="answer(0)"></button>
-  <button id="o1" onclick="answer(1)"></button>
-  <button id="o2" onclick="answer(2)"></button>
-  <button id="o3" onclick="answer(3)"></button>
-  <p id="feedback"></p>
-  <p style="font-size:14px;color:#ff6b6b;margin-top:10px;">❌ Kesalahan: <span id="wrongCount" style="font-weight:bold;">0</span>/5</p>
+  <p id="question" style="font-size:18px;font-weight:500;margin:20px 0;"></p>
+
+  <button id="o0" onclick="answer(0)" style="background:linear-gradient(135deg, #667eea, #764ba2);"></button>
+  <button id="o1" onclick="answer(1)" style="background:linear-gradient(135deg, #f093fb, #f5576c);"></button>
+  <button id="o2" onclick="answer(2)" style="background:linear-gradient(135deg, #4facfe, #00f2fe);"></button>
+  <button id="o3" onclick="answer(3)" style="background:linear-gradient(135deg, #43e97b, #38f9d7);"></button>
+
+  <p id="feedback" style="font-size:18px;margin:20px 0;min-height:30px;"></p>
 </div>
 
 <!-- GAME OVER SCREEN -->
@@ -219,7 +273,6 @@ button {
   <div style="background:#f0f0f0;padding:15px;border-radius:10px;margin-bottom:15px;">
     <p style="margin:5px 0;font-size:16px;">⭐ Point: <span id="finalPoint" style="font-weight:bold;color:#4facfe;"></span></p>
     <p style="margin:5px 0;font-size:16px;">📊 Nilai: <span id="finalScore" style="font-weight:bold;color:#4facfe;"></span>%</p>
-    <p style="margin:5px 0;font-size:16px;">🏆 Peringkat: <span id="finalRank" style="font-weight:bold;color:#ff6b6b;"></span></p>
   </div>
   <p id="rankMessage" style="font-size:16px;margin-bottom:20px;"></p>
   <button onclick="location.reload()">🔄 Main Lagi</button>
@@ -231,44 +284,22 @@ button {
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwn0JLkBQkS3O_WYhY6bfz_IdIXGQoEXJr68ciGcwM_S947L_r0cHa94rDns_Jdl7h8Fw/exec";
 
 const soalBank = [
-  // HUKUM NUN SUKUN DAN TANWIN (12 soal)
-  { q:"Hukum nun sukun bertemu ب adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:0 },
-  { q:"Hukum nun sukun bertemu ت adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:0 },
+  // HUKUM NUN SUKUN DAN TANWIN 
   { q:"Hukum nun sukun bertemu ث adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:1 },
   { q:"Hukum nun sukun bertemu ج adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:1 },
   { q:"Hukum nun sukun bertemu د adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:0 },
   { q:"Hukum nun sukun bertemu ل adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:0 },
   { q:"Tanwin bertemu ب hukumnya adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:2 },
-  { q:"Tanwin bertemu ت hukumnya adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:0 },
-  { q:"Tanwin bertemu ث hukumnya adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:1 },
   { q:"Tanwin bertemu ج hukumnya adalah?", o:["Idhgham","Ikhfa","Iqlab","Idzhar"], a:1 },
-  { q:"Nun sukun yang tidak boleh diidzharkan adalah?", o:["Bertemu Ha","Bertemu Ra","Bertemu Lam","Bertemu Mim"], a:2 },
   { q:"Tanwin dengan ghunnah terjadi pada?", o:["Semua huruf","Beberapa huruf","Hanya 4 huruf","Tidak ada"], a:1 },
   
-  // HUKUM MIM SUKUN (8 soal)
+  // HUKUM MIM SUKUN
   { q:"Hukum mim sukun bertemu ب adalah?", o:["Idhgham Mimi","Ikhfa Syafawi","Idzhar Syafawi","Iqlab"], a:0 },
-  { q:"Hukum mim sukun bertemu م adalah?", o:["Idhgham Mimi","Ikhfa Syafawi","Idzhar Syafawi","Iqlab"], a:0 },
   { q:"Hukum mim sukun bertemu ف adalah?", o:["Idhgham Mimi","Ikhfa Syafawi","Idzhar Syafawi","Iqlab"], a:1 },
-  { q:"Hukum mim sukun bertemu ا adalah?", o:["Idhgham Mimi","Ikhfa Syafawi","Idzhar Syafawi","Iqlab"], a:2 },
-  { q:"Ikhfa Syafawi menyamarkan dengan cara?", o:["Tanpa Ghunnah","Dengan Ghunnah","Penuh","Setengah"], a:1 },
-  { q:"Suara mim sukun keluar dari?", o:["Lidah","Bibir","Hidung","Gusi"], a:1 },
-  { q:"Mim bertasydid bacaannya disertai?", o:["Tanpa Ghunnah","Dengan Ghunnah","Idzhar","Iqlab"], a:1 },
-  { q:"Mim Sukun ketika bertemu dengan huruf ب disebut?", o:["Idhgham Mimi","Ikhfa Syafawi","Idzhar Syafawi","Iqlab"], a:0 },
   
-  // GHUNNAH MUSYADDADAH (3 soal)
+  // GHUNNAH MUSYADDADAH 
   { q:"Ghunnah Musyaddadah terjadi pada huruf?", o:["Nun bertasydid","Mim bertasydid","Keduanya","Tidak keduanya"], a:2 },
   { q:"Panjang Ghunnah Musyaddadah adalah?", o:["1 harakat","2 harakat","3 harakat","4 harakat"], a:1 },
-  { q:"Tempat keluarnya suara Ghunnah adalah?", o:["Mulut","Hidung","Lidah","Gigi"], a:1 },
-  
-  // FIQIH TENTANG AIR (8 soal)
-  { q:"Berapa jenis air menurut fiqih?", o:["2","3","4","5"], a:1 },
-  { q:"Air Mutlak adalah air yang?", o:["Dicampur dengan sesuatu","Murni tanpa campuran","Panas","Dingin"], a:1 },
-  { q:"Air suci dari najis adalah?", o:["Air yang mengalir","Air yang terkena najis","Air zamzam","Semua benar"], a:0 },
-  { q:"Wudhu dengan air yang jumlahnya sedikit adalah?", o:["Haram","Makruh","Boleh","Wajib"], a:2 },
-  { q:"Najis dapat dihilangkan dengan air?", o:["Satu tetes","Dua tetes","Enam tetes","Tidak bisa"], a:2 },
-  { q:"Air untuk wudhu harus?", o:["Hangat","Suci dari najis","Bersih","Semua benar"], a:3 },
-  { q:"Jika tidak ada air untuk wudhu, penggantiannya adalah?", o:["Tayammum","Langsung shalat","Berwudhu nanti","Tidak shalat"], a:0 },
-  { q:"Mandi wajib dilakukan setelah?", o:["Bermain","Tidur","Junub (bersetubuh)","Makan"], a:2 },
   
   // RUKUN IMAN (6 soal)
   { q:"Rukun Iman ada berapa?", o:["4","5","6","7"], a:2 },
@@ -285,16 +316,10 @@ const soalBank = [
   { q:"Zakat adalah rukun islam yang ke?", o:["Kedua","Ketiga","Keempat","Kelima"], a:2 },
   { q:"Haji adalah rukun islam yang ke?", o:["Ketiga","Keempat","Kelima","Keenam"], a:2 },
   
-  // CERITA NABI (10 soal)
-  { q:"Nabi Nuh diutus selama berapa tahun?", o:["500","800","900","950"], a:2 },
-  { q:"Bangsa yang diutus Nabi Hud adalah?", o:["Ad","Tsamud","Quraisy","Firaun"], a:0 },
+  // CERITA NABI 
   { q:"Nabi Ibrahim dipanggil sebagai?", o:["Khalil Allah","Amir Al-Mu'minin","Rasul Allah","Nabi Terbaik"], a:0 },
-  { q:"Ismail adalah anak dari Nabi?", o:["Ibrahim","Ishaq","Yakub","Yusuf"], a:0 },
   { q:"Nabi Musa menerima kitab berupa?", o:["Qur'an","Taurat","Injil","Zabur"], a:1 },
-  { q:"Nabi Isa adalah anak dari?", o:["Maryam","Aminah","Khadijah","Hawa"], a:0 },
   { q:"Mukjizat Nabi Isa yang terkenal adalah?", o:["Tongkat","Menghidupkan yang mati","Loh Mahfuzh","Cahaya bulan"], a:1 },
-  { q:"Firaun adalah penguasa?", o:["Syam","Mesir","Yaman","Hijaz"], a:1 },
-  { q:"Salib (penyalib) kaum Firaun disebut?", o:["Tanut","Haman","Qarun","Al-Walid"], a:1 },
   { q:"Nabi Daud menerima kitab berupa?", o:["Qur'an","Taurat","Zabur","Injil"], a:2 },
   
   // 4 SAHABAT UTAMA NABI (6 soal)
@@ -306,7 +331,7 @@ const soalBank = [
   { q:"Khalifah pertama setelah Nabi Muhammad adalah?", o:["Umar","Uthman","Abu Bakar","Ali"], a:2 },
   
   // DOA SEHARI-HARI (10 soal)
-  { q:"Doa sebelum makan adalah?", o:["Assalamualaikum","Bismillah","Alhamdulillah","Subhanallah"], a:1 },
+  { q:"Doa sebelum makan adalah?", o:["bismika","Allahumma bariklana","Ghufronak","Subhanallah"], a:1 },
   { q:"Doa sesudah makan adalah?", o:["Alhamdulillah","Bismillah","Subhanallah","Astaghfirullah"], a:0 },
   { q:"Doa masuk rumah dimulai dengan?", o:["Assalamualaikum","Bismillah Allahu Akbar","Alhamdulillah","Subhanallah"], a:1 },
   { q:"Doa keluar rumah dimulai dengan?", o:["Assalamualaikum","Bismillah Allahu Akbar","Alhamdulillah","Subhanallah"], a:1 },
@@ -317,20 +342,14 @@ const soalBank = [
   { q:"Doa saat bersin dimulai dengan?", o:["Alhamdulillah","Bismillah","Subhanallah","Assalamualaikum"], a:0 },
   { q:"Doa mendengar panggilan adzan adalah?", o:["Takbir","Tahlil","Repeating the adzan words","Shalawat"], a:2 },
   
-  // TAMBAHAN UNTUK LENGKAP 50 SOAL
-  { q:"Idzhar Hakiki terjadi ketika?", o:["Nun sukun bertemu ha","Huruf hidup bertemu ha","Mim sukun bertemu ha","Tanwin bertemu ha"], a:1 },
-  { q:"Iqlab terjadi ketika?", o:["Nun sukun bertemu ba","Tanwin bertemu ba","Mim sukun bertemu ba","Huruf hidup bertemu ba"], a:1 },
-  { q:"Rukun Islam yang keempat adalah?", o:["Shalat","Zakat","Puasa","Haji"], a:2 },
-  { q:"Nabi Yusuf dikenal dengan julukan?", o:["Al-Aziz","Ash-Shiddiq","Al-Mustafa","Al-Karim"], a:0 },
-  { q:"Nabi yang terkenal dengan kesabarannya adalah?", o:["Nabi Ayub","Nabi Musa","Nabi Ibrahim","Nabi Nuh"], a:0 }
 ];
 
 let soal = [];
 let i = 0;
 let point = 0;
-let wrong = 0;
 let playerName = "";
 
+/* ================= START QUIZ ================= */
 function startQuiz() {
   playerName = document.getElementById("playerName").value.trim();
   if (!playerName) {
@@ -338,121 +357,157 @@ function startQuiz() {
     return;
   }
 
-  soal = soalBank.sort(() => Math.random() - 0.5).slice(0, 15);
-  i = 0;
-  point = 0;
-  wrong = 0;
-
   document.getElementById("startScreen").style.display = "none";
-  document.getElementById("quizScreen").style.display = "block";
-  document.getElementById("totalQuestion").innerText = soal.length;
-  loadSoal();
+  document.getElementById("miniGameScreen").style.display = "block";
+  startMiniGame();
 }
 
+/* ================= LOAD SOAL ================= */
 function loadSoal() {
-  document.getElementById("questionNum").innerText = i + 1;
+  const buttons = document.querySelectorAll("#quizScreen button");
+
   document.getElementById("question").innerText = soal[i].q;
-  for (let x = 0; x < 4; x++) {
-    document.getElementById("o"+x).innerText = soal[i].o[x];
-  }
   document.getElementById("feedback").innerText = "";
+
+  buttons.forEach((btn, x) => {
+    btn.innerText = soal[i].o[x];
+    btn.disabled = false;
+  });
 }
 
+/* ================= JAWAB ================= */
 function answer(pilih) {
+  const buttons = document.querySelectorAll("#quizScreen button");
+  buttons.forEach(btn => btn.disabled = true);
+
   if (pilih === soal[i].a) {
     point += 10;
-    document.getElementById("feedback").innerText = "✅ Benar! +10 Point";
-    document.getElementById("feedback").className = "feedback-correct";
-  } else {
-    wrong++;
-    document.getElementById("feedback").innerText = "❌ Salah! Jawaban: " + soal[i].o[soal[i].a];
-    document.getElementById("feedback").className = "feedback-incorrect";
-    document.getElementById("wrongCount").innerText = wrong;
-    
-    if (wrong >= 5) {
-      setTimeout(gameOver, 800);
-      return;
+  }
+
+  setTimeout(() => {
+    i++;
+    if (i >= soal.length) {
+      selesai();
+    } else {
+      loadSoal();
     }
-  }
-
-  updateScore();
-  i++;
-
-  if (i < soal.length) {
-    setTimeout(loadSoal, 800);
-  } else {
-    selesai();
-  }
+  }, 400);
 }
 
-function updateScore() {
-  document.getElementById("point").innerText = point;
-  const maxPoint = soal.length * 10;
-  const percent = Math.round((point / maxPoint) * 100);
-  document.getElementById("scoreProgress").style.width = percent + "%";
-  document.getElementById("scoreProgress").innerText = percent + "%";
-}
-
+/* ================= SELESAI QUIZ ================= */
 function selesai() {
-  const nilai = Math.max(0, Math.round((point / (soal.length * 10)) * 100));
-  let peringkat = "";
-  let message = "";
-
-  if (nilai >= 90) {
-    peringkat = "⭐⭐⭐⭐ Baik Sekali";
-    message = "Luar biasa! Kamu sangat mahir!";
-  } else if (nilai >= 75) {
-    peringkat = "⭐⭐⭐ Baik";
-    message = "Bagus! Terus tingkatkan belajarmu!";
-  } else if (nilai >= 60) {
-    peringkat = "⭐⭐ Cukup";
-    message = "Cukup baik, tapi jangan berhenti belajar!";
-  } else {
-    peringkat = "⭐ Kurang";
-    message = "Belajar lebih giat lagi ya! Semangat!";
-  }
+  const nilai = Math.round((point / (soal.length * 10)) * 100);
 
   document.getElementById("quizScreen").style.display = "none";
   document.getElementById("resultScreen").style.display = "block";
   document.getElementById("playerNameDisplay").innerText = "👤 " + playerName;
   document.getElementById("finalPoint").innerText = point;
   document.getElementById("finalScore").innerText = nilai;
-  document.getElementById("finalRank").innerText = peringkat;
-  document.getElementById("rankMessage").innerText = message;
 
-  kirimKeSpreadsheet(playerName, point, nilai, peringkat);
+  kirimKeSpreadsheet(playerName, point, nilai, "Selesai");
 }
 
-function gameOver() {
-  document.getElementById("quizScreen").style.display = "none";
-  document.getElementById("gameOverScreen").style.display = "block";
-  document.getElementById("gameOverPlayerName").innerText = "👤 " + playerName;
-  document.getElementById("gameOverQuestions").innerText = i + " dari " + soal.length;
-  document.getElementById("gameOverPoint").innerText = point;
-
-  kirimKeSpreadsheet(playerName, point, 0, "Game Over");
-}
-
+/* ================= KIRIM SPREADSHEET ================= */
 function kirimKeSpreadsheet(nama, score, nilai, ranking) {
   const data = new URLSearchParams();
   data.append("nama", nama);
   data.append("score", score);
   data.append("nilai", nilai);
   data.append("peringkat", ranking);
-  data.append("tanggal", new Date().toLocaleDateString("id-ID"));
-  data.append("waktu", new Date().toLocaleTimeString("id-ID"));
 
   fetch(GOOGLE_APPS_SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
     body: data
-  })
-  .then(response => {
-    console.log("Data terkirim ke Google Sheets ✅", { nama, score, nilai, ranking });
-  })
-  .catch(err => {
-    console.error("Gagal kirim data:", err);
   });
+}
+
+/* ================= MINI GAME ================= */
+let miniScore = 0;
+let gameInterval;
+let timeLeft = 20;
+let target = "";
+const huruf = ["ا","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز"];
+
+function startMiniGame() {
+  miniScore = 0;
+  timeLeft = 20;
+
+  document.getElementById("miniScore").innerText = miniScore;
+  document.getElementById("gameTime").innerText = timeLeft;
+
+  pilihTarget();
+
+  gameInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById("gameTime").innerText = timeLeft;
+
+    buatHurufJatuh();
+    // Buat huruf lebih sering muncul
+    setTimeout(() => buatHurufJatuh(), 300);
+
+    if (timeLeft <= 0) {
+      clearInterval(gameInterval);
+      selesaiMiniGame();
+    }
+  }, 800);
+}
+
+function pilihTarget() {
+  target = huruf[Math.floor(Math.random() * huruf.length)];
+  document.getElementById("targetHuruf").innerText = target;
+}
+
+function buatHurufJatuh() {
+  const gameArea = document.getElementById("gameArea");
+  const el = document.createElement("div");
+  // 60% target, 40% random
+  const isTarget = Math.random() < 0.6;
+  const displayHuruf = isTarget ? target : huruf[Math.floor(Math.random() * huruf.length)];
+
+  el.innerText = displayHuruf;
+  el.className = "hurufJatuh";
+  el.style.left = Math.random() * 85 + 5 + "%";
+
+  el.onclick = function(e) {
+    e.stopPropagation();
+    if (displayHuruf === target) {
+      miniScore += 10;
+      document.getElementById("miniScore").innerText = miniScore;
+      el.classList.add("correct");
+      el.style.pointerEvents = "none";
+      setTimeout(() => el.remove(), 200);
+      pilihTarget();
+    } else {
+      el.style.opacity = "0.3";
+      el.style.pointerEvents = "none";
+    }
+  };
+
+  gameArea.appendChild(el);
+
+  let pos = 0;
+  let fall = setInterval(() => {
+    pos += 3;
+    el.style.top = pos + "px";
+
+    if (pos > 420) {
+      clearInterval(fall);
+      el.remove();
+    }
+  }, 25);
+}
+
+function selesaiMiniGame() {
+  point = miniScore;
+
+  document.getElementById("miniGameScreen").style.display = "none";
+  document.getElementById("quizScreen").style.display = "block";
+
+  soal = soalBank.sort(() => Math.random() - 0.5).slice(0, 15);
+  i = 0;
+
+  loadSoal();
 }
 </script>
 
